@@ -1189,131 +1189,136 @@ All USB devices MUST have a <a>default control pipe</a> which is
         Note: When no [[!ECMAScript]] code can observe an instance of {{USBDevice}} |device|
         anymore, the UA SHOULD run |device|.{{USBDevice/close()}}.
 
-<div algorithm="selectConfiguration">
-    : <dfn>selectConfiguration(|configurationValue|)</dfn>
+    : <dfn>selectConfiguration(configurationValue)</dfn>
     ::
-        When invoked, MUST return a new {{Promise}} |promise| and run the following steps in
-        parallel:
-        1. Let |device| be the target {{USBDevice}} object.
-        1. If |device| is no longer connected to the system, <a>reject</a> |promise|
-            with a {{NotFoundError}} and abort these steps.
-        1. Let |selectedConfiguration| be <code>null</code>.
-        1. <a>For each</a> |configuration| of {{USBDevice/[[configurations]]}}:
-            1. If |configuration|.{{USBConfiguration/configurationValue}} is equal to 
-                |configurationValue|, set |selectedConfiguration| to |configuration|
-                and break.
-        1. If |selectedConfiguration| is <code>null</code>, <a>reject</a> |promise| 
-            with a {{NotFoundError}} and abort these steps.
-        1. If <code>|device|.{{USBDevice/opened}}</code> is not equal to
-            <code>true</code> <a>reject</a> |promise| with an {{InvalidStateError}} and
-            abort these steps.
-        1. If |device|.{{USBDevice/configuration}} is not <code>null</code>:
-            1. <a>For each</a> |interface| of
-                |device|.{{USBDevice/configuration}}.{{USBConfiguration/interfaces}}:
-                1. Perform <a>to abort transfers currently scheduled on an interface</a> with |interface|.
-        1. Issue a <code>SET_CONFIGURATION</code> <a>control transfer</a> with
-            <code>configurationValue</code> set to the |configurationValue|.
-            If this step fails <a>reject</a> |promise| with a {{NetworkError}} and
-            abort these steps.
-        1. Let |numInterfaces| be the <a>size</a> of |selectedConfiguration|.{{USBConfiguration/interfaces}}.
-        1. Resize {{USBDevice/[[selectedAlternateSetting]]}} to |numInterfaces|.
-        1. Fill {{USBDevice/[[selectedAlternateSetting]]}} with 0.
-        1. Resize {{USBDevice/[[claimedInterface]]}} to |numInterfaces|.
-        1. Fill {{USBDevice/[[claimedInterface]]}} with <code>false</code>.
-        1. Set {{USBDevice/[[configurationValue]]}} to |configurationValue| 
-            and <a>resolve</a> |promise|.
-</div>
+        <div algorithm="selectConfiguration">
+            When invoked, MUST return a new {{Promise}} |promise| and run the following steps in
+            parallel:
+            1. Let |configurationValue| be the parameter of <code>configurationValue</code>.
+            1. Let |device| be the target {{USBDevice}} object.
+            1. If |device| is no longer connected to the system, <a>reject</a> |promise|
+                with a {{NotFoundError}} and abort these steps.
+            1. Let |selectedConfiguration| be <code>null</code>.
+            1. <a>For each</a> |configuration| of {{USBDevice/[[configurations]]}}:
+                1. If |configuration|.{{USBConfiguration/configurationValue}} is equal to 
+                    |configurationValue|, set |selectedConfiguration| to |configuration|
+                    and break.
+            1. If |selectedConfiguration| is <code>null</code>, <a>reject</a> |promise| 
+                with a {{NotFoundError}} and abort these steps.
+            1. If <code>|device|.{{USBDevice/opened}}</code> is not equal to
+                <code>true</code> <a>reject</a> |promise| with an {{InvalidStateError}} and
+                abort these steps.
+            1. If |device|.{{USBDevice/configuration}} is not <code>null</code>:
+                1. <a>For each</a> |interface| of
+                    |device|.{{USBDevice/configuration}}.{{USBConfiguration/interfaces}}:
+                    1. Perform <a>to abort transfers currently scheduled on an interface</a> with |interface|.
+            1. Issue a <code>SET_CONFIGURATION</code> <a>control transfer</a> with
+                <code>configurationValue</code> set to the |configurationValue|.
+                If this step fails <a>reject</a> |promise| with a {{NetworkError}} and
+                abort these steps.
+            1. Let |numInterfaces| be the <a>size</a> of |selectedConfiguration|.{{USBConfiguration/interfaces}}.
+            1. Resize {{USBDevice/[[selectedAlternateSetting]]}} to |numInterfaces|.
+            1. Fill {{USBDevice/[[selectedAlternateSetting]]}} with 0.
+            1. Resize {{USBDevice/[[claimedInterface]]}} to |numInterfaces|.
+            1. Fill {{USBDevice/[[claimedInterface]]}} with <code>false</code>.
+            1. Set {{USBDevice/[[configurationValue]]}} to |configurationValue| 
+                and <a>resolve</a> |promise|.
+        </div>
 
-<div algorithm="claimInterface">
-    : <dfn>claimInterface(|interfaceNumber|)</dfn>
+    : <dfn>claimInterface(interfaceNumber)</dfn>
     ::
-        When invoked, MUST return a new {{Promise}} |promise| and run the following 
-        steps <a>in parallel</a>:
+        <div algorithm="claimInterface">
+            When invoked, MUST return a new {{Promise}} |promise| and run the following 
+            steps <a>in parallel</a>:
+                1. Let |interfaceNumber| be the parameter of <code>interfaceNumber</code>.
+                1. Let |device| be the target {{USBDevice}} object.
+                1. If |device| is no longer connected to the system, <a>reject</a> |promise|
+                    with a {{NotFoundError}} and abort these steps.
+                1. if |device|.{{USBDevice/configuration}} is <code>null</code>, <a>reject</a> |promise|
+                    with a {{InvalidStateError}} and abort these steps.
+                1. Let |interfaceIndex| be the result of <a>to find the interface index</a> with
+                    |interfaceNumber| and |device|.{{USBDevice/configuration}}.
+                1. If |interfaceIndex| is equal to |interfaces|'s <a>size</a>,
+                    <a>reject</a> |promise| with a {{NotFoundError}} and abort these steps.
+                1. If <code>|device|.{{USBDevice/opened}}</code> is not <code>true</code>,
+                    <a>reject</a> |promise| with an {{InvalidStateError}} and abort these
+                    steps.
+                1. If |device|.{{USBDevice/[[claimedInterface]]}}[|interfaceIndex|] is <code>true</code>,
+                    <a>resolve</a> |promise| and abort these steps.
+                1. If |interfaces|[|interfaceIndex|].{{USBInterface/[[isProtectedClass]]}} is <code>true</code>, 
+                    [=reject=] |promise| with a {{SecurityError}} and abort these steps.
+                1. Perform the necessary platform-specific steps to request exclusive control
+                    over |interfaces|[|interfaceIndex|] for the current execution context. If this fails,
+                    <a>reject</a> |promise| with a {{NetworkError}} and abort these steps.
+                1. Set |device|.{{USBDevice/[[claimedInterface]]}}[|interfaceIndex|] to <code>true</code>
+                    and <a>resolve</a> |promise|.
+        </div>
+
+    : <dfn>releaseInterface(interfaceNumber)</dfn>
+    ::
+        <div algorithm="releaseInterface">
+            When invoked, MUST return a new {{Promise}} |promise| and run the following
+            steps <a>in parallel</a>:
+                1. Let |interfaceNumber| be the parameter of <code>interfaceNumber</code>.
+                1. Let |device| be the target {{USBDevice}} object.
+                2. If |device| is no longer connected to the system, <a>reject</a> |promise|
+                    with a {{NotFoundError}} and abort these steps.
+                1. if |device|.{{USBDevice/configuration}} is <code>null</code>, <a>reject</a> |promise|
+                    with a {{InvalidStateError}} and abort these steps.
+                1. Let |interfaceIndex| be the result of <a>to find the interface index</a> with
+                    |interfaceNumber| and |device|.{{USBDevice/configuration}}.
+                1. If |interfaceIndex| is equal to |interfaces|'s <a>size</a>,
+                    <a>reject</a> |promise| with a {{NotFoundError}} and abort these steps.
+                1. If <code>|device|.{{USBDevice/opened}}</code> is not <code>true</code>,
+                    <a>reject</a> |promise| with an {{InvalidStateError}} and abort these
+                    steps.
+                1. If |device|.{{USBDevice/[[claimedInterface]]}}[|interfaceIndex|] is <code>false</code>,
+                    <a>resolve</a> |promise| and abort these steps.
+                1. Perform the necessary platform-specific steps to reliquish exclusive
+                    control over |interfaces|[|interfaceIndex|].
+                1. Set |device|.{{USBDevice/[[selectedAlternateSetting]]}}[|interfaceIndex|] to <code>0</code>.
+                1. Set |device|.{{USBDevice/[[claimedInterface]]}}[|interfaceIndex|] to <code>false</code>
+                    and <a>resolve</a> |promise|.
+        </div>
+
+    : <dfn>selectAlternateInterface(interfaceNumber, alternateSetting)</dfn>
+    ::
+        <div algorithm="selectAlternateInterface">
+            When invoked, MUST return a new {{Promise}} |promise| and run the
+            following steps <a>in parallel</a>:
+            1. Let |interfaceNumber| be the parameter of <code>interfaceNumber</code>.
+            1. Let |alternateSetting| be the parameter of <code>alternateSetting</code>.
             1. Let |device| be the target {{USBDevice}} object.
             1. If |device| is no longer connected to the system, <a>reject</a> |promise|
                 with a {{NotFoundError}} and abort these steps.
             1. if |device|.{{USBDevice/configuration}} is <code>null</code>, <a>reject</a> |promise|
                 with a {{InvalidStateError}} and abort these steps.
+            1. Let |interfaces| be |device|.{{USBDevice/configuration}}.{{USBConfiguration/interfaces}}.
             1. Let |interfaceIndex| be the result of <a>to find the interface index</a> with
                 |interfaceNumber| and |device|.{{USBDevice/configuration}}.
             1. If |interfaceIndex| is equal to |interfaces|'s <a>size</a>,
                 <a>reject</a> |promise| with a {{NotFoundError}} and abort these steps.
-            1. If <code>|device|.{{USBDevice/opened}}</code> is not <code>true</code>,
-                <a>reject</a> |promise| with an {{InvalidStateError}} and abort these
-                steps.
-            1. If |device|.{{USBDevice/[[claimedInterface]]}}[|interfaceIndex|] is <code>true</code>,
-                <a>resolve</a> |promise| and abort these steps.
-            1. If |interfaces|[|interfaceIndex|].{{USBInterface/[[isProtectedClass]]}} is <code>true</code>, 
-                [=reject=] |promise| with a {{SecurityError}} and abort these steps.
-            1. Perform the necessary platform-specific steps to request exclusive control
-                over |interfaces|[|interfaceIndex|] for the current execution context. If this fails,
-                <a>reject</a> |promise| with a {{NetworkError}} and abort these steps.
-            1. Set |device|.{{USBDevice/[[claimedInterface]]}}[|interfaceIndex|] to <code>true</code>
-                and <a>resolve</a> |promise|.
-</div>
-
-<div algorithm="releaseInterface">
-    : <dfn>releaseInterface(|interfaceNumber|)</dfn>
-    ::
-        When invoked, MUST return a new {{Promise}} |promise| and run the following
-        steps <a>in parallel</a>:
-            1. Let |device| be the target {{USBDevice}} object.
-            2. If |device| is no longer connected to the system, <a>reject</a> |promise|
-                with a {{NotFoundError}} and abort these steps.
-            1. if |device|.{{USBDevice/configuration}} is <code>null</code>, <a>reject</a> |promise|
-                with a {{InvalidStateError}} and abort these steps.
-            1. Let |interfaceIndex| be the result of <a>to find the interface index</a> with
-                |interfaceNumber| and |device|.{{USBDevice/configuration}}.
-            1. If |interfaceIndex| is equal to |interfaces|'s <a>size</a>,
+            1. If <code>|device|.{{USBDevice/opened}}</code> or
+                |device|.{{USBDevice/[[claimedInterface]]}}[|interfaceIndex|
+                is not <code>true</code>, <a>reject</a> |promise| with an
+                {{InvalidStateError}} and abort these steps.
+            1. Let |interface| be
+                |device|.{{USBDevice/configuration}}.{{USBConfiguration/interfaces}}[|interfaceIndex|].
+            1. Let |alternates| be |interface|.{{USBInterface/alternates}}.
+            1. Let |alternateIndex| be the result of <a>to find the alternate index</a> with
+                |alternateSetting| and |interface|.
+            1. If |alternateIndex| is equal to |alternates|'s <a>size</a>,
                 <a>reject</a> |promise| with a {{NotFoundError}} and abort these steps.
-            1. If <code>|device|.{{USBDevice/opened}}</code> is not <code>true</code>,
-                <a>reject</a> |promise| with an {{InvalidStateError}} and abort these
-                steps.
-            1. If |device|.{{USBDevice/[[claimedInterface]]}}[|interfaceIndex|] is <code>false</code>,
-                <a>resolve</a> |promise| and abort these steps.
-            1. Perform the necessary platform-specific steps to reliquish exclusive
-                control over |interfaces|[|interfaceIndex|].
-            1. Set |device|.{{USBDevice/[[selectedAlternateSetting]]}}[|interfaceIndex|] to <code>0</code>.
-            1. Set |device|.{{USBDevice/[[claimedInterface]]}}[|interfaceIndex|] to <code>false</code>
-                and <a>resolve</a> |promise|.
-</div>
-
-<div algorithm="selectAlternateInterface">
-    : <dfn>selectAlternateInterface(|interfaceNumber|, |alternateSetting|)</dfn>
-    ::
-        When invoked, MUST return a new {{Promise}} |promise| and run the
-        following steps <a>in parallel</a>:
-        1. Let |device| be the target {{USBDevice}} object.
-        1. If |device| is no longer connected to the system, <a>reject</a> |promise|
-            with a {{NotFoundError}} and abort these steps.
-        1. if |device|.{{USBDevice/configuration}} is <code>null</code>, <a>reject</a> |promise|
-            with a {{InvalidStateError}} and abort these steps.
-        1. Let |interfaces| be |device|.{{USBDevice/configuration}}.{{USBConfiguration/interfaces}}.
-        1. Let |interfaceIndex| be the result of <a>to find the interface index</a> with
-            |interfaceNumber| and |device|.{{USBDevice/configuration}}.
-        1. If |interfaceIndex| is equal to |interfaces|'s <a>size</a>,
-            <a>reject</a> |promise| with a {{NotFoundError}} and abort these steps.
-        1. If <code>|device|.{{USBDevice/opened}}</code> or
-            |device|.{{USBDevice/[[claimedInterface]]}}[|interfaceIndex|
-            is not <code>true</code>, <a>reject</a> |promise| with an
-            {{InvalidStateError}} and abort these steps.
-        1. Let |interface| be
-            |device|.{{USBDevice/configuration}}.{{USBConfiguration/interfaces}}[|interfaceIndex|].
-        1. Let |alternates| be |interface|.{{USBInterface/alternates}}.
-        1. Let |alternateIndex| be the result of <a>to find the alternate index</a> with
-            |alternateSetting| and |interface|.
-        1. If |alternateIndex| is equal to |alternates|'s <a>size</a>,
-            <a>reject</a> |promise| with a {{NotFoundError}} and abort these steps.
-        1. Perform <a>to abort transfers currently scheduled on an interface</a> with |interface|.
-        1. Issue a <code>SET_INTERFACE</code> <a>control transfer</a> with
-            <code>interfaceNumber</code> set to the |interfaceNumber| and
-            <code>alternateSetting</code> set to the |alternateSetting|.
-            If this step fails <a>reject</a> |promise| with a {{NetworkError}} and
-            abort these steps.
-        1. Set |device|.{{USBDevice/[[selectedAlternateSetting]]}}[|interfaceIndex|]
-            to <code>alternateSetting</code>.
-        1. <a>Resolve</a> |promise|.
-</div>
+            1. Perform <a>to abort transfers currently scheduled on an interface</a> with |interface|.
+            1. Issue a <code>SET_INTERFACE</code> <a>control transfer</a> with
+                <code>interfaceNumber</code> set to the |interfaceNumber| and
+                <code>alternateSetting</code> set to the |alternateSetting|.
+                If this step fails <a>reject</a> |promise| with a {{NetworkError}} and
+                abort these steps.
+            1. Set |device|.{{USBDevice/[[selectedAlternateSetting]]}}[|interfaceIndex|]
+                to <code>alternateSetting</code>.
+            1. <a>Resolve</a> |promise|.
+        </div>
 
     : <dfn>controlTransferIn(setup, length)</dfn>
     ::
@@ -1753,26 +1758,28 @@ slots</a> described in the following table:
 ### Constructors ### {#usbconfiguration-constructors}
 
 <dl dfn-type=constructor dfn-for="USBConfiguration">
-<div algorithm="USBConfiguration constructor">
-    : <dfn>USBConfiguration(|device|,|configurationValue|)</dfn>
+    : <dfn>USBConfiguration(device,configurationValue)</dfn>
     ::
-        1. Set {{USBConfiguration/[[device]]}} to |device|.
-        1. Set {{USBConfiguration/[[configurationValue]]}} to |configurationValue|.
-        1. Let |descriptors| be the result of <a>to find a list of descriptors for a configuration</a>
-            with <code>configurationValue</code> set to |configurationValue|.
-        1. Let |seen| be an empty <a>ordered set</a>.
-        1. <a>For each</a> |descriptor| of |descriptors|:
-            1. If the <code>bDescriptorType</code> of the |descriptor|
-                is not equal to <code>INTERFACE</code>, continue.
-            1. If the <code>bInterfaceNumber</code> of the |descriptor|
-                is in |seen|, continue.
-            1. Let |interface| be a <a>new</a> {{USBInterface}} object using
-                <a>USBInterface(|configuration|,|interfaceNumber|)</a> with
-                |configuration| set to <a>this</a> and
-                |interfaceNumber| set to <code>bInterfaceNumber</code> of |descriptor|.
-            1. <a>Append</a> |interface| to {{USBConfiguration/[[interfaces]]}}.
-            1. <a>Append</a> <code>bInterfaceNumber</code> of |descriptor| to <var>seen</var>.
-</div>
+        <div algorithm="USBConfiguration constructor">
+            1. Let |device| be the parameter of <code>device</code>.
+            1. Let |configurationValue| be the parameter of <code>configurationValue</code>.
+            1. Set {{USBConfiguration/[[device]]}} to |device|.
+            1. Set {{USBConfiguration/[[configurationValue]]}} to |configurationValue|.
+            1. Let |descriptors| be the result of <a>to find a list of descriptors for a configuration</a>
+                with <code>configurationValue</code> set to |configurationValue|.
+            1. Let |seen| be an empty <a>ordered set</a>.
+            1. <a>For each</a> |descriptor| of |descriptors|:
+                1. If the <code>bDescriptorType</code> of the |descriptor|
+                    is not equal to <code>INTERFACE</code>, continue.
+                1. If the <code>bInterfaceNumber</code> of the |descriptor|
+                    is in |seen|, continue.
+                1. Let |interface| be a <a>new</a> {{USBInterface}} object using
+                    <a>USBInterface(|configuration|,|interfaceNumber|)</a> with
+                    |configuration| set to <a>this</a> and
+                    |interfaceNumber| set to <code>bInterfaceNumber</code> of |descriptor|.
+                1. <a>Append</a> |interface| to {{USBConfiguration/[[interfaces]]}}.
+                1. <a>Append</a> <code>bInterfaceNumber</code> of |descriptor| to <var>seen</var>.
+        </div>
 </dl>
 
 ### Attributes ### {#usbconfiguration-attributes}
@@ -1857,7 +1864,6 @@ slots</a> described in the following table:
   </tr>  
 </table>
 
-<div algorithm=has a protected interface class">
 An [=interface descriptor=] |interface| <dfn>has a protected interface class</dfn>
 if and only if |interface|'s <code>bInterfaceClass</code> is equal to one
 of the following values.
@@ -1905,34 +1911,33 @@ of this API is to support devices which are not covered by other, more high
 level APIs. The list above includes interface classes for which such high level
 APIs exist and provide greater protection for user privacy and security than
 low level access through this API would.
-</div>
 
 ### Constructors ### {#usbinterface-constructors}
 
 <dl dfn-type=constructor dfn-for="USBInterface">
-<div algorithm="USBInterface constructor">
     : <dfn>USBInterface(|configuration|,|interfaceNumber|)</dfn>
     ::
-        1. Set {{USBInterface/[[configuration]]}} to |configuration|.
-        1. Set {{USBInterface/[[interfaceNumber]]}} to |interfaceNumber|.
-        1. Let |descriptors| be the result of
-            <a>to find a list of descriptors for a configuration</a> with
-            <code>configurationValue</code> set to
-            |configuration|.{{USBConfiguration/[[configurationValue]]}}.
-        1. <a>For each</a> |descriptor| of |descriptors|:
-            1. If <code>bDescriptorType</code> of |descriptor| is not equal to <code>INTERFACE</code>,
-                continue.
-            1. If <code>bInterfaceNumber</code> of |descriptor| is not equal to |interfaceNumber|,
-                continue.
-            1. If |descriptor| <a>has a protected interface class</a>,
-                set {{USBInterface/[[isProtectedClass]]}} to <code>true</code>,
-                otherwise, set {{USBInterface/[[isProtectedClass]]}} to <code>false</code>,
-            1. Let |alternate| be a <a>new</a> {{USBAlternateInterface}} object 
-                using <a>USBAlternateInterface(|deviceInterface|,|alternateSetting|)</a> with
-                |deviceInterface| set to <a>this</a> and
-                |alternateSetting| set to the <code>bAlternateSetting</code> of the |descriptor|.
-            1. <a>Append</a> |alternate| to {{USBInterface/[[alternates]]}}.
-</div>
+        <div algorithm="USBInterface constructor">    
+            1. Set {{USBInterface/[[configuration]]}} to |configuration|.
+            1. Set {{USBInterface/[[interfaceNumber]]}} to |interfaceNumber|.
+            1. Let |descriptors| be the result of
+                <a>to find a list of descriptors for a configuration</a> with
+                <code>configurationValue</code> set to
+                |configuration|.{{USBConfiguration/[[configurationValue]]}}.
+            1. <a>For each</a> |descriptor| of |descriptors|:
+                1. If <code>bDescriptorType</code> of |descriptor| is not equal to <code>INTERFACE</code>,
+                    continue.
+                1. If <code>bInterfaceNumber</code> of |descriptor| is not equal to |interfaceNumber|,
+                    continue.
+                1. If |descriptor| <a>has a protected interface class</a>,
+                    set {{USBInterface/[[isProtectedClass]]}} to <code>true</code>,
+                    otherwise, set {{USBInterface/[[isProtectedClass]]}} to <code>false</code>,
+                1. Let |alternate| be a <a>new</a> {{USBAlternateInterface}} object 
+                    using <a>USBAlternateInterface(|deviceInterface|,|alternateSetting|)</a> with
+                    |deviceInterface| set to <a>this</a> and
+                    |alternateSetting| set to the <code>bAlternateSetting</code> of the |descriptor|.
+                1. <a>Append</a> |alternate| to {{USBInterface/[[alternates]]}}.
+        </div>
 </dl>
 
 ### Attributes ### {#usbinterface-attributes}
@@ -2081,31 +2086,33 @@ slots</a> described in the following table:
 ### Constructors ### {#usbalternateinterface-constructors}
 
 <dl dfn-type=constructor dfn-for="USBAlternateInterface">
-<div algorithm="USBAlternateInterface constructor">
-    : <dfn>USBAlternateInterface(|deviceInterface|,|alternateSetting|)</dfn>
+    : <dfn>USBAlternateInterface(deviceInterface,alternateSetting)</dfn>
     ::
-        1. Set {{USBAlternateInterface/[[interface]]}} to |deviceInterface|.
-        1. Set {{USBAlternateInterface/[[alternateSetting]]}} to be |alternateSetting|.
-        1. Let |descriptors| be the result of <a>to find a list of endpoint descriptors</a> with 
-            <code>interfaceNumber</code> set to |deviceInterface|.{{USBInterface/interfaceNumber}},
-            <code>alternateSetting</code> set to |alternateSetting|,
-            and <code>configurationValue</code> set to
-            |deviceInterface|.{{USBInterface/[[configuration]]}}.{{USBConfiguration/[[configurationValue]]}}.
-        1. <a>For each</a> |descriptor| of |descriptors|:
-            1. If <code>bmAttributes</code> of |descriptor| indicates it is a 
-                Control Transfer Type (bits <code>0..1</code> is <code>00</code>
-                according to <a>endpoint descriptor</a>), continue.
-            1. Let |endpointAddress| be <code>bEndpointAddress</code> of |descriptor|.
-            1. Let |dir| be <code>null</code>.
-            1. If <code>|endpointAddress| & 0x80</code> is <code>0</code>, set |dir| to {{USBDirection/"out"}}.
-            1. Otherwise, set |dir| to {{USBDirection/"in"}}.
-            1. Let |endpoint| be a <a>new</a> {{USBEndpoint}} object 
-                using <a>USBEndpoint(|alternate|,|endpointNumber|,|direction|)</a>
-                with |alternate| set to <a>this</a>,
-                |endpointNumber| set to <code>|endpointAddress| & 0xF</code>, and
-                |direction| set to |dir|.
-            1. <a>Append</a> |endpoint| to {{USBAlternateInterface/[[endpoints]]}}.
-</div>
+        <div algorithm="USBAlternateInterface constructor">
+            1. Let |deviceInterface| be the parameter of <code>deviceInterface</code>.
+            1. Let |alternateSetting| be the parameter of <code>alternateSetting</code>.
+            1. Set {{USBAlternateInterface/[[interface]]}} to |deviceInterface|.
+            1. Set {{USBAlternateInterface/[[alternateSetting]]}} to be |alternateSetting|.
+            1. Let |descriptors| be the result of <a>to find a list of endpoint descriptors</a> with 
+                <code>interfaceNumber</code> set to |deviceInterface|.{{USBInterface/interfaceNumber}},
+                <code>alternateSetting</code> set to |alternateSetting|,
+                and <code>configurationValue</code> set to
+                |deviceInterface|.{{USBInterface/[[configuration]]}}.{{USBConfiguration/[[configurationValue]]}}.
+            1. <a>For each</a> |descriptor| of |descriptors|:
+                1. If <code>bmAttributes</code> of |descriptor| indicates it is a 
+                    Control Transfer Type (bits <code>0..1</code> is <code>00</code>
+                    according to <a>endpoint descriptor</a>), continue.
+                1. Let |endpointAddress| be <code>bEndpointAddress</code> of |descriptor|.
+                1. Let |dir| be <code>null</code>.
+                1. If <code>|endpointAddress| & 0x80</code> is <code>0</code>, set |dir| to {{USBDirection/"out"}}.
+                1. Otherwise, set |dir| to {{USBDirection/"in"}}.
+                1. Let |endpoint| be a <a>new</a> {{USBEndpoint}} object 
+                    using <a>USBEndpoint(|alternate|,|endpointNumber|,|direction|)</a>
+                    with |alternate| set to <a>this</a>,
+                    |endpointNumber| set to <code>|endpointAddress| & 0xF</code>, and
+                    |direction| set to |dir|.
+                1. <a>Append</a> |endpoint| to {{USBAlternateInterface/[[endpoints]]}}.
+        </div>
 </dl>
 
 ### Attributes ### {#usbalternateinterface-attributes}
@@ -2220,15 +2227,18 @@ slots</a> described in the following table:
 ### Constructors ### {#usbendpoint-constructors}
 
 <dl dfn-type=constructor dfn-for="USBEndpoint">
-<div algorithm="USBEndpoint constructor">
-    : <dfn>USBEndpoint(|alternate|,|endpointNumber|,|direction|)</dfn>
+    : <dfn>USBEndpoint(alternate,endpointNumber,direction)</dfn>
     ::
-        1. Set {{USBEndpoint/[[alternateInterface]]}} to |alternate|.
-        1. Let |endpointAddress| be |endpointNumber|.
-        1. If |direction| is {{USBDirection/"in"}}, set |endpointAddress| to
-            <code>|endpointAddress| | 0x80</code>.
-        1. Set {{USBEndpoint/[[endpointAddress]]}} to |endpointAddress|.
-</div>
+        <div algorithm="USBEndpoint constructor">
+            1. Let |alternate| be the parameter of <code>alternate</code>.
+            1. Let |endpointNumber| be the parameter of <code>endpointNumber</code>.
+            1. Let |direction| be the parameter of <code>direction</code>.
+            1. Set {{USBEndpoint/[[alternateInterface]]}} to |alternate|.
+            1. Let |endpointAddress| be |endpointNumber|.
+            1. If |direction| is {{USBDirection/"in"}}, set |endpointAddress| to
+                <code>|endpointAddress| | 0x80</code>.
+            1. Set {{USBEndpoint/[[endpointAddress]]}} to |endpointAddress|.
+        </div>
 </dl>
 
 ### Attributes ### {#usbendpoint-attributes}
