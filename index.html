@@ -6,7 +6,7 @@
   <link href="https://www.w3.org/StyleSheets/TR/2021/cg-draft" rel="stylesheet">
   <meta content="Bikeshed version 2e3c4c68b, updated Fri Jan 14 14:49:00 2022 -0800" name="generator">
   <link href="https://wicg.github.io/webusb" rel="canonical">
-  <meta content="8207524545b83d7b4ce5276764a0a9b1d4f53d99" name="document-revision">
+  <meta content="756ad8eec6c8361d23754bfaee09d5b4a86a88a4" name="document-revision">
 <style>
 table {
   border-collapse: collapse;
@@ -3271,8 +3271,8 @@ slots</a> described in the following table:</p>
       <td> All alternate setting supported by this interface. 
      <tr>
       <td><dfn class="dfn-paneled idl-code" data-dfn-for="USBInterface" data-dfn-type="attribute" data-export id="dom-usbinterface-isprotectedclass-slot"><code>[[isProtectedClass]]</code></dfn>
-      <td>&lt;always set in prose>
-      <td> If this interface belongs to protected class. 
+      <td><code>false</code>
+      <td> If this interface has any alternate setting belonging to a protected class. 
    </table>
    <p>An <a data-link-type="dfn" href="#interface-descriptor" id="ref-for-interface-descriptor②">interface descriptor</a> <var>interface</var> <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="has-a-protected-interface-class">has a protected interface class</dfn> if and only if <var>interface</var>’s <code>bInterfaceClass</code> is equal to one
 of the following values.</p>
@@ -3338,8 +3338,7 @@ continue.</p>
 continue.</p>
          <li data-md>
           <p>If <var>descriptor</var> <a data-link-type="dfn" href="#has-a-protected-interface-class" id="ref-for-has-a-protected-interface-class">has a protected interface class</a>,
-set <code class="idl"><a data-link-type="idl" href="#dom-usbinterface-isprotectedclass-slot" id="ref-for-dom-usbinterface-isprotectedclass-slot①">[[isProtectedClass]]</a></code> to <code>true</code>,
-otherwise, set <code class="idl"><a data-link-type="idl" href="#dom-usbinterface-isprotectedclass-slot" id="ref-for-dom-usbinterface-isprotectedclass-slot②">[[isProtectedClass]]</a></code> to <code>false</code>,</p>
+set <code class="idl"><a data-link-type="idl" href="#dom-usbinterface-isprotectedclass-slot" id="ref-for-dom-usbinterface-isprotectedclass-slot①">[[isProtectedClass]]</a></code> to <code>true</code>.</p>
          <li data-md>
           <p>Let <var>alternate</var> be a <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#new" id="ref-for-new②">new</a> <code class="idl"><a data-link-type="idl" href="#usbalternateinterface" id="ref-for-usbalternateinterface⑤">USBAlternateInterface</a></code> object
 using <a data-link-type="functionish" href="#dom-usbalternateinterface-usbalternateinterface" id="ref-for-dom-usbalternateinterface-usbalternateinterface">USBAlternateInterface(<var>deviceInterface</var>,<var>alternateSetting</var>)</a> with <var>deviceInterface</var> set to <a data-link-type="dfn" href="https://webidl.spec.whatwg.org/#this" id="ref-for-this④">this</a> and <var>alternateSetting</var> set to the <code>bAlternateSetting</code> of the <var>descriptor</var>.</p>
@@ -5926,7 +5925,7 @@ parameters in addition to a larger data payload that can be either IN or OUT.</p
    <b><a href="#dom-usbinterface-isprotectedclass-slot">#dom-usbinterface-isprotectedclass-slot</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-dom-usbinterface-isprotectedclass-slot">6.1.2. Methods</a>
-    <li><a href="#ref-for-dom-usbinterface-isprotectedclass-slot①">6.4.1. Constructors</a> <a href="#ref-for-dom-usbinterface-isprotectedclass-slot②">(2)</a>
+    <li><a href="#ref-for-dom-usbinterface-isprotectedclass-slot①">6.4.1. Constructors</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="has-a-protected-interface-class">
